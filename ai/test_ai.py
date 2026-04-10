@@ -3,8 +3,8 @@ from ai.recommender import get_recommendations
 result = get_recommendations(
     phase="luteal",
     condition="PCOS",
-    symptoms=["bloating", "fatigue"],
-    pain_score=3
+    symptoms=["headache", "cramps"],
+    pain_score=7
 )
 
 print(result)
