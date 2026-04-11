@@ -1,16 +1,17 @@
 import os
+import requests
 import json
 import re
 from dotenv import load_dotenv
-from google import genai
 from ai.prompts import build_prompt
 
 load_dotenv()
 
-# ── Cache: same key structure as original (phase-condition-pain_score) ─────────
+API_KEY = os.getenv("OPENROUTER_API_KEY")
+
+# Cache to avoid repeated API calls
 cache = {}
 
-# ── Fallback identical to original ────────────────────────────────────────────
 FALLBACK = {
     "workout": "Gentle yoga or stretching",
     "diet": "Warm, nourishing foods",
@@ -20,60 +21,49 @@ FALLBACK = {
 
 
 def extract_json(text: str) -> dict:
-    """
-    Robust JSON extractor — handles clean JSON and responses with stray text.
-    Same approach as original extract_json(), keeps behaviour identical.
-    """
     try:
         return json.loads(text)
     except Exception:
-        # Strip markdown fences if model ignored instructions
         text = re.sub(r"```(?:json)?", "", text).strip()
         match = re.search(r'\{.*\}', text, re.DOTALL)
         if match:
             return json.loads(match.group())
-        raise ValueError("Could not extract valid JSON from Gemini response")
+        raise ValueError("Could not extract valid JSON from response")
 
 
 def get_recommendations(phase: str, condition: str, symptoms: list, pain_score: int) -> dict:
-    """
-    Drop-in replacement for the original OpenRouter/GPT-3.5 version.
-
-    Changes from original:
-      - Removed: requests.post to openrouter.ai
-      - Removed: OPENROUTER_API_KEY env var
-      - Added:   google.genai client with GEMINI_API_KEY
-      - Model:   gemini-1.5-flash  (fast, free-tier eligible)
-      - Everything else — cache key, prompt, fallback, extract_json — unchanged
-    """
     key = f"{phase}-{condition}-{pain_score}"
 
     # Return cached result if available
     if key in cache:
         return cache[key]
 
-    api_key = os.getenv("GEMINI_API_KEY", "")
-
-    # If no valid key is set, return fallback immediately (safe for local dev)
-    if not api_key or api_key == "your_gemini_api_key_here":
-        print("⚠️  GEMINI_API_KEY not set — returning fallback recommendations")
+    if not API_KEY:
+        print("⚠️  OPENROUTER_API_KEY not set — returning fallback")
         return FALLBACK
 
     prompt = build_prompt(phase, condition, symptoms, pain_score)
 
     try:
-        client = genai.Client(api_key=api_key)
-
-        response = client.models.generate_content(
-            model="gemini-2.0-flash",
-            contents=prompt,
+        response = requests.post(
+            url="https://openrouter.ai/api/v1/chat/completions",
+            headers={
+                "Authorization": f"Bearer {API_KEY}",
+                "Content-Type": "application/json"
+            },
+            json={
+                "model": "openai/gpt-3.5-turbo",
+                "messages": [
+                    {"role": "user", "content": prompt}
+                ]
+            }
         )
 
-        content = response.text
-
+        result = response.json()
+        content = result["choices"][0]["message"]["content"]
         data = extract_json(content)
 
-        # Enforce pain rules defensively (same intent as original prompt rules)
+        # Enforce pain rules defensively
         if pain_score >= 4:
             data["intensity"] = "low"
 
