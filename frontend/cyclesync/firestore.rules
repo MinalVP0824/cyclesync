@@ -1,0 +1,154 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: users
+    // Document ID: {userId}
+    // Fields:
+    //   - name: string (required, 1-100 chars)
+    //   - averageCycleLength: number (required, 20-45)
+    //   - averagePeriodLength: number (required, 1-14)
+    //   - conditions: list (required, strings)
+    //   - lastPeriodDate: string (required, ISO 8601)
+    //
+    // Collection: users/{userId}/logs
+    // Document ID: {logId}
+    // Fields:
+    //   - date: string (required, YYYY-MM-DD)
+    //   - flow: string (required, enum: None, Light, Medium, Heavy)
+    //   - symptoms: list (required, strings)
+    //   - mood: string (required, 1-50 chars)
+    //   - energy: number (required, 1-10)
+    //
+    // Collection: users/{userId}/medications
+    // Document ID: {medId}
+    // Fields:
+    //   - name: string (required, 1-100 chars)
+    //   - dosage: string (required, 1-100 chars)
+    //   - frequency: string (required, 1-100 chars)
+    //   - reminderTime: string (optional, HH:mm)
+    //   - active: bool (required)
+    //
+    // Collection: forum_posts
+    // Document ID: {postId}
+    // Fields:
+    //   - authorId: string (required, immutable)
+    //   - authorName: string (required, 1-50 chars)
+    //   - content: string (required, 1-1000 chars)
+    //   - timestamp: string (required, ISO 8601, immutable)
+    //   - likes: number (required)
+    //   - tags: list (required, strings)
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isValidString(val, min, max) {
+      return val is string && val.size() >= min && val.size() <= max;
+    }
+
+    function isValidList(val, maxItems) {
+      return val is list && val.size() <= maxItems;
+    }
+
+    function isValidDateString(dateStr) {
+      return dateStr is string && dateStr.matches("^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}.*Z?$");
+    }
+
+    function isValidSimpleDate(dateStr) {
+      return dateStr is string && dateStr.matches("^\\d{4}-\\d{2}-\\d{2}$");
+    }
+
+    // ===============================================================
+    // Domain Validators
+    // ===============================================================
+
+    function isValidUserProfile(data) {
+      return data.keys().hasAll(['name', 'averageCycleLength', 'averagePeriodLength', 'conditions', 'lastPeriodDate']) &&
+             data.keys().hasOnly(['name', 'averageCycleLength', 'averagePeriodLength', 'conditions', 'lastPeriodDate']) &&
+             isValidString(data.name, 1, 100) &&
+             data.averageCycleLength is number && data.averageCycleLength >= 20 && data.averageCycleLength <= 45 &&
+             data.averagePeriodLength is number && data.averagePeriodLength >= 1 && data.averagePeriodLength <= 14 &&
+             isValidList(data.conditions, 10) &&
+             isValidDateString(data.lastPeriodDate);
+    }
+
+    function isValidDailyLog(data) {
+      return data.keys().hasAll(['date', 'flow', 'symptoms', 'mood', 'energy']) &&
+             data.keys().hasOnly(['date', 'flow', 'symptoms', 'mood', 'energy']) &&
+             isValidSimpleDate(data.date) &&
+             data.flow in ['None', 'Light', 'Medium', 'Heavy'] &&
+             isValidList(data.symptoms, 20) &&
+             isValidString(data.mood, 1, 50) &&
+             data.energy is number && data.energy >= 1 && data.energy <= 10;
+    }
+
+    function isValidMedication(data) {
+      return data.keys().hasAll(['name', 'dosage', 'frequency', 'active']) &&
+             data.keys().hasOnly(['name', 'dosage', 'frequency', 'active', 'reminderTime']) &&
+             isValidString(data.name, 1, 100) &&
+             isValidString(data.dosage, 1, 100) &&
+             isValidString(data.frequency, 1, 100) &&
+             (!('reminderTime' in data) || isValidString(data.reminderTime, 1, 10)) &&
+             data.active is bool;
+    }
+
+    function isValidForumPost(data) {
+      return data.keys().hasAll(['authorId', 'authorName', 'content', 'timestamp', 'likes', 'tags']) &&
+             data.keys().hasOnly(['authorId', 'authorName', 'content', 'timestamp', 'likes', 'tags']) &&
+             data.authorId == request.auth.uid &&
+             isValidString(data.authorName, 1, 50) &&
+             isValidString(data.content, 1, 1000) &&
+             isValidDateString(data.timestamp) &&
+             data.likes is number &&
+             isValidList(data.tags, 10);
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /users/{userId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidUserProfile(request.resource.data);
+      allow update: if isOwner(userId) && isValidUserProfile(request.resource.data);
+
+      match /logs/{logId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidDailyLog(request.resource.data);
+        allow update: if isOwner(userId) && isValidDailyLog(request.resource.data);
+        allow delete: if isOwner(userId);
+      }
+
+      match /medications/{medId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidMedication(request.resource.data);
+        allow update: if isOwner(userId) && isValidMedication(request.resource.data);
+        allow delete: if isOwner(userId);
+      }
+    }
+
+    match /forum_posts/{postId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isValidForumPost(request.resource.data);
+      allow update: if isAuthenticated() && 
+                      (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes']) || 
+                       (resource.data.authorId == request.auth.uid && isValidForumPost(request.resource.data)));
+      allow delete: if isAuthenticated() && resource.data.authorId == request.auth.uid;
+    }
+  }
+}
