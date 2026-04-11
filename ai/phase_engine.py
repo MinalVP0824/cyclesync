@@ -1,6 +1,12 @@
-def estimate_phase(cycle_day, symptoms, condition):
+def estimate_phase(cycle_day: int, symptoms: list, condition: str) -> dict:
+    """
+    Estimates the current cycle phase.
 
-    # ✅ Regular cycle logic
+    No AI API is used here — pure logic, unchanged from original.
+    Kept as-is so existing callers don't break.
+    """
+
+    # Regular cycle — day-based ranges
     if condition == "None":
         if 1 <= cycle_day <= 5:
             return {"phase": "menstrual", "confidence": 0.9}
@@ -11,9 +17,8 @@ def estimate_phase(cycle_day, symptoms, condition):
         else:
             return {"phase": "luteal", "confidence": 0.9}
 
-    # 🔥 PCOS / Irregular logic (basic scoring)
+    # PCOS / Irregular — symptom scoring
     score = 0
-
     if "cramps" in symptoms:
         score += 1
     if "bloating" in symptoms:
