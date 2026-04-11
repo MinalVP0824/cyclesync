@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Badge } from '@/components/ui/badge';
 import { Recommendation, HealthProfile, CyclePhase } from '@/types';
-import { getPersonalizedRecommendations } from '@/lib/gemini';
+import { getPersonalizedRecommendations } from '@/lib/api';
 import { motion } from 'motion/react';
 import { Zap, Utensils, HeartPulse, Loader2 } from 'lucide-react';
 
