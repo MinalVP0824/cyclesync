@@ -58,29 +58,31 @@ export function Forum() {
     <div className="space-y-6">
       <div className="flex items-center justify-between px-2">
         <div className="flex items-center gap-2">
-          <MessageSquare className="w-6 h-6 text-rose-600" />
-          <h2 className="text-2xl font-serif font-bold text-rose-900">Community Forum</h2>
+          <div className="p-2 rounded-xl bg-rose-500 text-white shadow-lg">
+            <MessageSquare className="w-6 h-6" />
+          </div>
+          <h2 className="text-2xl font-display font-black text-rose-900 dark:text-rose-100 tracking-tight">Community Forum</h2>
         </div>
-        <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 gap-1">
+        <Badge variant="outline" className="bg-emerald-50/50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border-emerald-200/50 dark:border-emerald-700/50 gap-1 backdrop-blur-sm font-bold">
           <ShieldCheck className="w-3 h-3" /> Anonymous
         </Badge>
       </div>
 
-      <Card className="border-none shadow-md bg-white overflow-hidden">
+      <Card className="border-none glass-card overflow-hidden">
         <CardContent className="p-4">
           <div className="flex gap-3">
-            <div className="w-10 h-10 rounded-full bg-rose-100 flex items-center justify-center text-rose-500 font-bold">
+            <div className="w-10 h-10 rounded-2xl bg-rose-100 dark:bg-rose-900/40 flex items-center justify-center text-rose-500 font-black shadow-sm">
               A
             </div>
             <div className="flex-1 space-y-3">
               <textarea
                 placeholder="Share your experience or ask a question anonymously..."
-                className="w-full min-h-[100px] p-3 rounded-xl border border-rose-100 focus:ring-2 focus:ring-rose-500 focus:outline-none resize-none text-sm"
+                className="w-full min-h-[100px] p-4 rounded-2xl glass border-none focus:ring-2 focus:ring-rose-500 focus:outline-none resize-none text-sm dark:text-white dark:placeholder:text-gray-500 font-medium"
                 value={newPostContent}
                 onChange={(e) => setNewPostContent(e.target.value)}
               />
               <div className="flex justify-end">
-                <Button onClick={handlePost} className="bg-rose-500 hover:bg-rose-600 text-white rounded-full px-6">
+                <Button onClick={handlePost} className="bg-rose-600 hover:bg-rose-700 text-white rounded-2xl px-8 py-6 font-black tracking-tight glass-button border-none shadow-lg">
                   <Send className="w-4 h-4 mr-2" /> Post
                 </Button>
               </div>
@@ -96,22 +98,23 @@ export function Forum() {
               key={post.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
             >
-              <Card className="border-none shadow-sm bg-white hover:shadow-md transition-shadow">
+              <Card className="border-none glass-card hover:shadow-xl transition-all duration-500 group">
                 <CardHeader className="pb-2">
                   <div className="flex justify-between items-start">
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 text-xs font-bold">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-rose-400 to-orange-400 flex items-center justify-center text-white text-xs font-black shadow-md group-hover:scale-110 transition-transform">
                         {post.authorName[0]}
                       </div>
                       <div>
-                        <p className="text-sm font-bold text-gray-900">{post.authorName}</p>
-                        <p className="text-xs text-gray-500">{new Date(post.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                        <p className="text-sm font-display font-black text-gray-900 dark:text-white tracking-tight">{post.authorName}</p>
+                        <p className="text-[10px] text-gray-500 dark:text-gray-400 font-bold uppercase tracking-widest">{new Date(post.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
                       </div>
                     </div>
-                    <div className="flex gap-1">
+                    <div className="flex flex-wrap gap-1 justify-end max-w-[50%]">
                       {post.tags.map(tag => (
-                        <Badge key={tag} variant="secondary" className="text-[10px] bg-rose-50 text-rose-600 border-none">
+                        <Badge key={tag} variant="secondary" className="text-[9px] font-black uppercase tracking-widest bg-rose-100/50 dark:bg-rose-900/40 text-rose-700 dark:text-rose-300 border-none px-2">
                           #{tag}
                         </Badge>
                       ))}
@@ -119,20 +122,28 @@ export function Forum() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-gray-700 text-sm leading-relaxed">{post.content}</p>
+                  <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed font-medium">{post.content}</p>
                 </CardContent>
                 <CardFooter className="pt-0 flex gap-4">
                   <button 
                     onClick={() => handleLike(post.id)}
-                    className="flex items-center gap-1 text-gray-400 hover:text-rose-500 transition-colors text-xs"
+                    className="flex items-center gap-1.5 text-gray-400 hover:text-rose-500 transition-all duration-300 text-xs font-black uppercase tracking-widest group/btn"
                   >
-                    <Heart className="w-4 h-4" /> {post.likes}
+                    <div className="p-2 rounded-xl group-hover/btn:bg-rose-50 dark:group-hover/btn:bg-rose-900/20 transition-colors">
+                      <Heart className="w-4 h-4 group-hover/btn:fill-current" />
+                    </div>
+                    {post.likes}
                   </button>
-                  <button className="flex items-center gap-1 text-gray-400 hover:text-rose-500 transition-colors text-xs">
-                    <MessageSquare className="w-4 h-4" /> Reply
+                  <button className="flex items-center gap-1.5 text-gray-400 hover:text-rose-500 transition-all duration-300 text-xs font-black uppercase tracking-widest group/btn">
+                    <div className="p-2 rounded-xl group-hover/btn:bg-rose-50 dark:group-hover/btn:bg-rose-900/20 transition-colors">
+                      <MessageSquare className="w-4 h-4" />
+                    </div>
+                    Reply
                   </button>
-                  <button className="flex items-center gap-1 text-gray-400 hover:text-rose-500 transition-colors text-xs ml-auto">
-                    <Share2 className="w-4 h-4" />
+                  <button className="flex items-center gap-1.5 text-gray-400 hover:text-rose-500 transition-all duration-300 text-xs font-black uppercase tracking-widest group/btn ml-auto">
+                    <div className="p-2 rounded-xl group-hover/btn:bg-rose-50 dark:group-hover/btn:bg-rose-900/20 transition-colors">
+                      <Share2 className="w-4 h-4" />
+                    </div>
                   </button>
                 </CardFooter>
               </Card>

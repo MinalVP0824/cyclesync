@@ -69,9 +69,9 @@ export function Tracker({ profile, logs }: TrackerProps) {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="border-none shadow-md overflow-hidden">
-          <CardHeader className="bg-rose-50 pb-4">
-            <CardTitle className="font-serif text-rose-900">Cycle Calendar</CardTitle>
+        <Card className="border-none glass-card overflow-hidden">
+          <CardHeader className="bg-rose-50/50 dark:bg-rose-900/20 pb-4">
+            <CardTitle className="font-display font-black text-rose-900 dark:text-rose-100 tracking-tight">Cycle Calendar</CardTitle>
           </CardHeader>
           <CardContent className="p-0">
             <Calendar
@@ -83,48 +83,50 @@ export function Tracker({ profile, logs }: TrackerProps) {
                 period: (date) => logs.some(l => isSameDay(parseISO(l.date), date) && l.flow !== 'None')
               }}
               modifiersStyles={{
-                period: { backgroundColor: '#fee2e2', color: '#991b1b', fontWeight: 'bold', borderRadius: '50%' }
+                period: { backgroundColor: '#f43f5e', color: 'white', fontWeight: 'bold', borderRadius: '50%' }
               }}
             />
           </CardContent>
         </Card>
 
-        <Card className="border-none shadow-md">
+        <Card className="border-none glass-card">
           <CardHeader>
-            <CardTitle className="font-serif">
+            <CardTitle className="font-display font-black text-rose-900 dark:text-rose-100 tracking-tight">
               {selectedDate ? format(selectedDate, 'MMMM d, yyyy') : 'Select a date'}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-3">
-              <Label className="text-sm font-medium text-gray-500 uppercase tracking-wider">Mood</Label>
+              <Label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Mood</Label>
               <div className="flex gap-4">
                 {moods.map(m => (
                   <button
                     key={m.label}
                     onClick={() => updateMood(m.label)}
-                    className={`flex flex-col items-center gap-1 p-3 rounded-xl transition-all ${
-                      currentLog?.mood === m.label ? 'bg-rose-100 text-rose-600 scale-110' : 'text-gray-400 hover:text-gray-600'
+                    className={`flex flex-col items-center gap-1 p-3 rounded-2xl transition-all duration-300 ${
+                      currentLog?.mood === m.label 
+                        ? 'bg-rose-500 text-white scale-110 shadow-lg' 
+                        : 'glass-button text-gray-400 dark:text-gray-500'
                     }`}
                   >
                     {m.icon}
-                    <span className="text-[10px] font-bold">{m.label}</span>
+                    <span className="text-[10px] font-black uppercase tracking-tighter">{m.label}</span>
                   </button>
                 ))}
               </div>
             </div>
 
             <div className="space-y-3">
-              <Label className="text-sm font-medium text-gray-500 uppercase tracking-wider">Symptoms</Label>
+              <Label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Symptoms</Label>
               <div className="flex flex-wrap gap-2">
                 {symptoms.map(s => (
                   <Badge
                     key={s}
                     variant={currentLog?.symptoms.includes(s) ? 'default' : 'outline'}
-                    className={`cursor-pointer transition-all px-3 py-1 ${
+                    className={`cursor-pointer transition-all px-4 py-1.5 rounded-full font-bold text-xs ${
                       currentLog?.symptoms.includes(s) 
-                        ? 'bg-rose-500 hover:bg-rose-600' 
-                        : 'hover:bg-rose-50 border-rose-100 text-rose-700'
+                        ? 'bg-rose-500 hover:bg-rose-600 border-none shadow-md' 
+                        : 'glass-button border-none text-rose-700 dark:text-rose-300'
                     }`}
                     onClick={() => toggleSymptom(s)}
                   >
@@ -135,15 +137,17 @@ export function Tracker({ profile, logs }: TrackerProps) {
             </div>
 
             <div className="space-y-3">
-              <Label className="text-sm font-medium text-gray-500 uppercase tracking-wider">Energy Level</Label>
-              <div className="flex items-center justify-between bg-gray-50 p-4 rounded-2xl">
+              <Label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Energy Level</Label>
+              <div className="flex items-center justify-between glass p-4 rounded-3xl">
                 <Moon className="w-5 h-5 text-gray-400" />
                 <div className="flex gap-2">
                   {[1, 2, 3, 4, 5].map(level => (
                     <button
                       key={level}
-                      className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
-                        (currentLog?.energy || 0) >= level * 2 ? 'bg-rose-500 text-white' : 'bg-white text-gray-400 border border-gray-100'
+                      className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 font-bold ${
+                        (currentLog?.energy || 0) >= level * 2 
+                          ? 'bg-rose-500 text-white shadow-md' 
+                          : 'glass-button border-none text-gray-400'
                       }`}
                       onClick={() => updateEnergy(level)}
                     >
@@ -155,8 +159,8 @@ export function Tracker({ profile, logs }: TrackerProps) {
               </div>
             </div>
 
-            <div className="pt-4 border-t border-gray-100">
-              <Button className="w-full bg-rose-600 hover:bg-rose-700 text-white rounded-xl py-6">
+            <div className="pt-4">
+              <Button className="w-full bg-rose-600 hover:bg-rose-700 text-white rounded-2xl py-6 font-black tracking-tight glass-button border-none shadow-lg">
                 Save Daily Log
               </Button>
             </div>
@@ -164,29 +168,29 @@ export function Tracker({ profile, logs }: TrackerProps) {
         </Card>
       </div>
 
-      <Card className="border-none shadow-md">
+      <Card className="border-none glass-card">
         <CardHeader>
-          <CardTitle className="font-serif text-rose-900">History</CardTitle>
+          <CardTitle className="font-display font-black text-rose-900 dark:text-rose-100 tracking-tight">History</CardTitle>
         </CardHeader>
         <CardContent>
           <ScrollArea className="h-[300px] pr-4">
             <div className="space-y-4">
               {logs.sort((a, b) => b.date.localeCompare(a.date)).map((log) => (
-                <div key={log.date} className="flex items-start gap-4 p-4 rounded-2xl bg-white border border-rose-50 shadow-sm">
-                  <div className="bg-rose-50 p-3 rounded-xl text-rose-600 font-bold text-center min-w-[60px]">
-                    <p className="text-xs uppercase">{format(parseISO(log.date), 'MMM')}</p>
-                    <p className="text-lg">{format(parseISO(log.date), 'dd')}</p>
+                <div key={log.date} className="flex items-start gap-4 p-4 rounded-3xl glass hover:shadow-lg transition-all duration-500 group">
+                  <div className="bg-rose-500 p-3 rounded-2xl text-white font-black text-center min-w-[60px] shadow-sm group-hover:scale-105 transition-transform">
+                    <p className="text-[10px] uppercase tracking-widest">{format(parseISO(log.date), 'MMM')}</p>
+                    <p className="text-xl tracking-tighter">{format(parseISO(log.date), 'dd')}</p>
                   </div>
                   <div className="flex-1 space-y-2">
                     <div className="flex justify-between items-center">
-                      <Badge variant="secondary" className="bg-rose-100 text-rose-700 border-none">
+                      <Badge variant="secondary" className="bg-rose-100/50 dark:bg-rose-900/40 text-rose-700 dark:text-rose-300 border-none font-black text-[10px] uppercase tracking-wider">
                         {log.mood}
                       </Badge>
-                      <span className="text-xs text-gray-400">Energy: {log.energy}/10</span>
+                      <span className="text-[10px] text-gray-400 dark:text-gray-500 font-black uppercase tracking-widest">Energy: {log.energy}/10</span>
                     </div>
                     <div className="flex flex-wrap gap-1">
                       {log.symptoms.map(s => (
-                        <span key={s} className="text-[10px] text-gray-500 bg-gray-50 px-2 py-0.5 rounded-full">
+                        <span key={s} className="text-[10px] text-gray-500 dark:text-gray-400 bg-white/50 dark:bg-black/20 px-2 py-0.5 rounded-full font-bold">
                           {s}
                         </span>
                       ))}
